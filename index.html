@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SHADOW</title>
+  
+  <!-- Firebase SDKs for Global Real-time Cross-Device Syncing -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    /* Global Reset & Base Styling */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      min-height: 100vh;
+      background: #08030d;
+      color: #ffffff;
+      overflow-x: hidden;
+      width: 100vw;
+    }
+
+    .screen {
+      display: none;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    /* ----------------------------------
+       1. LANDING PAGE & S-CURVE LOGO
+    ---------------------------------- */
+    #landing-screen {
+      justify-content: center;
+      align-items: center;
+      background: radial-gradient(circle at center, #1b072d 0%, #08030d 75%, #000000 100%);
+      position: relative;
+      padding: 20px;
+    }
+
+    .ambient-glow {
+      position: absolute;
+      width: 90vw;
+      max-width: 550px;
+      height: 90vw;
+      max-height: 550px;
+      background: rgba(168, 85, 247, 0.22);
+      filter: blur(140px);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .hero-container {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 45px 30px;
+      background: rgba(15, 7, 25, 0.85);
+      border: 1px solid rgba(168, 85, 247, 0.35);
+      border-radius: 28px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95),
+                  0 0 50px rgba(147, 51, 234, 0.25);
+      max-width: 480px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* S-Curve Cyber Horn Emblem */
+    .logo-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 25px;
+      position: relative;
+    }
+
+    .logo-emblem {
+      width: 130px;
+      height: 130px;
+      background: radial-gradient(circle, rgba(168, 85, 247, 0.2) 0%, rgba(8, 3, 13, 0.9) 70%);
+      border: 1.5px solid rgba(192, 132, 252, 0.35);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 40px rgba(168, 85, 247, 0.65),
+                  inset 0 0 20px rgba(147, 51, 234, 0.45);
+      margin-bottom: 16px;
+      animation: shadowPulse 3.5s infinite ease-in-out;
+    }
+
+    .logo-emblem svg {
+      width: 105px;
+      height: 105px;
+      filter: drop-shadow(0 0 12px rgba(192, 132, 252, 0.95));
+    }
+
+    @keyframes shadowPulse {
+      0%, 100% { box-shadow: 0 0 30px rgba(168, 85, 247, 0.5), inset 0 0 15px rgba(147, 51, 234, 0.35); transform: scale(1); }
+      50% { box-shadow: 0 0 50px rgba(216, 180, 254, 0.85), inset 0 0 25px rgba(168, 85, 247, 0.6); transform: scale(1.03); }
+    }
+
+    .company-title {
+      font-size: clamp(2.8rem, 8vw, 3.8rem);
+      font-weight: 900;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #ffffff;
+      background: linear-gradient(180deg, #ffffff 20%, #c084fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 20px rgba(168, 85, 247, 0.6),
+                   0 0 40px rgba(147, 51, 234, 0.4);
+      margin-bottom: 6px;
+      line-height: 1;
+    }
+
+    .logo-subtitle {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.3em;
+      color: #a855f7;
+      text-transform: uppercase;
+      opacity: 0.9;
+    }
+
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      width: 100%;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 20px;
+      font-size: clamp(0.9rem, 3.5vw, 1rem);
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: none;
+      width: 100%;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #7e22ce 0%, #a855f7 100%);
+      color: #ffffff;
+      border: 1px solid rgba(216, 180, 254, 0.4);
+      box-shadow: 0 6px 20px rgba(147, 51, 234, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(168, 85, 247, 0.6);
+    }
+
+    .btn-folder {
+      background: rgba(147, 51, 234, 0.25);
+      color: #e9d5ff;
+      border: 1px solid rgba(168, 85, 247, 0.5);
+    }
+
+    .btn-folder:hover {
+      background: rgba(147, 51, 234, 0.45);
+      color: #ffffff;
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: rgba(18, 9, 31, 0.8);
+      color: #e9d5ff;
+      border: 1px solid rgba(168, 85, 247, 0.4);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(35, 14, 58, 0.9);
+      color: #ffffff;
+      transform: translateY(-2px);
+    }
+
+    .btn-auth {
+      background: rgba(255, 255, 255, 0.05);
+      color: #cbd5e1;
+      border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+
+    .btn-auth:hover {
+      background: rgba(168, 85, 247, 0.2);
+      color: #ffffff;
+      transform: translateY(-2px);
+    }
+
+    .btn-admin {
+      margin-top: 15px;
+      background: transparent;
+      color: #a855f7;
+      border: 1px dashed rgba(168, 85, 247, 0.4);
+      font-size: 0.82rem;
+      padding: 8px 16px;
+      border-radius: 20px;
+    }
+
+    .btn-admin:hover {
+      background: rgba(168, 85, 247, 0.15);
+      color: #ffffff;
+    }
+
+    .logged-status {
+      font-size: 0.85rem;
+      color: #4ade80;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(74, 222, 128, 0.1);
+      border: 1px solid rgba(74, 222, 128, 0.25);
+      padding: 8px 14px;
+      border-radius: 12px;
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .btn-logout {
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+      padding: 3px 8px;
+      font-size: 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    /* ----------------------------------
+       2. CODE EDITOR / IDE SCREEN
+    ---------------------------------- */
+    #ide-screen {
+      flex-direction: column;
+      background: #0d0714;
+    }
+
+    .ide-header {
+      min-height: 50px;
+      background: #0a0410;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 15px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .brand-mini {
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      color: #a855f7;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ide-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+    .ide-btn {
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      background: rgba(168, 85, 247, 0.15);
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      color: #ffffff;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .ide-btn:hover { background: rgba(168, 85, 247, 0.35); }
+
+    .btn-publish {
+      background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+      border: none;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .ide-body { display: flex; flex: 1; overflow: hidden; }
+
+    .sidebar {
+      width: 200px;
+      background: #060209;
+      border-right: 1px solid rgba(168, 85, 247, 0.15);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-title {
+      padding: 12px 16px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.1);
+    }
+
+    .file-tree { list-style: none; padding: 10px 0; overflow-y: auto; }
+
+    .file-item {
+      padding: 8px 16px;
+      font-size: 0.88rem;
+      color: #cbd5e1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .file-item:hover, .file-item.active {
+      background: rgba(168, 85, 247, 0.25);
+      color: #ffffff;
+    }
+
+    .editor-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid rgba(168, 85, 247, 0.15);
+      min-width: 0;
+    }
+
+    .active-tab {
+      background: #0d0714;
+      padding: 10px 20px;
+      font-size: 0.85rem;
+      color: #a855f7;
+      border-bottom: 2px solid #a855f7;
+      width: fit-content;
+    }
+
+    .code-input {
+      flex: 1;
+      background: #09040e;
+      color: #f1f5f9;
+      border: none;
+      outline: none;
+      padding: 15px;
+      font-family: monospace;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      resize: none;
+    }
+
+    .preview-container {
+      flex: 1;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .preview-header {
+      background: #11081c;
+      color: #94a3b8;
+      padding: 8px 16px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    iframe { width: 100%; height: 100%; border: none; }
+
+    @media (max-width: 768px) {
+      .ide-body { flex-direction: column; overflow-y: auto; }
+      .sidebar { width: 100%; max-height: 120px; border-right: none; border-bottom: 1px solid rgba(168, 85, 247, 0.2); }
+      .editor-container { height: 50vh; border-right: none; border-bottom: 1px solid rgba(168, 85, 247, 0.2); }
+      .preview-container { height: 50vh; }
+    }
+
+    /* ----------------------------------
+       3. COMMUNITY / GLOBAL PROJECTS
+    ---------------------------------- */
+    #community-screen {
+      flex-direction: column;
+      background: #08030d;
+    }
+
+    .community-header {
+      padding: 15px 20px;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0a0410;
+    }
+
+    .community-body {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 15px;
+      align-content: start;
+    }
+
+    .project-card {
+      background: rgba(15, 7, 25, 0.8);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .project-title { font-size: 1.1rem; font-weight: bold; color: #fff; }
+    .project-author { font-size: 0.82rem; color: #c084fc; }
+
+    /* Modals */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+      padding: 15px;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal-box {
+      background: #0f0719;
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      border-radius: 20px;
+      padding: 25px 20px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-large {
+      max-width: 850px;
+      height: 85vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 15px;
+      text-align: left;
+    }
+
+    .form-group label { font-size: 0.85rem; color: #c084fc; }
+    .form-group input, .form-group textarea {
+      padding: 12px;
+      background: #060209;
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      border-radius: 8px;
+      color: #ffffff;
+      outline: none;
+      font-size: 0.95rem;
+    }
+
+    .msg-box { font-size: 0.82rem; margin-bottom: 12px; text-align: center; }
+    .msg-error { color: #f87171; }
+    .msg-success { color: #4ade80; }
+
+    .user-list {
+      max-height: 150px;
+      overflow-y: auto;
+      background: #060209;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(168, 85, 247, 0.2);
+      text-align: left;
+      font-family: monospace;
+      font-size: 0.85rem;
+      color: #e9d5ff;
+    }
+
+    /* WhatsApp Chat Interface */
+    .whatsapp-modal {
+      max-width: 500px;
+      height: 80vh;
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      overflow: hidden;
+      border-radius: 16px;
+      background: #0b141a;
+      border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+
+    .wa-header {
+      background: #1f2c34;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .wa-user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .wa-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #7e22ce, #a855f7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: #fff;
+      font-size: 1.1rem;
+    }
+
+    .wa-name-box { display: flex; flex-direction: column; }
+    .wa-name { font-weight: 600; font-size: 1rem; color: #e9edef; }
+    .wa-status { font-size: 0.75rem; color: #8696a0; }
+
+    .wa-body {
+      flex: 1;
+      background: #0b141a;
+      background-image: radial-gradient(rgba(168, 85, 247, 0.05) 1px, transparent 0);
+      background-size: 16px 16px;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .wa-bubble {
+      max-width: 75%;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      position: relative;
+      word-wrap: break-word;
+    }
+
+    .wa-bubble-sent {
+      align-self: flex-end;
+      background: #005c4b;
+      color: #e9edef;
+      border-top-right-radius: 0;
+    }
+
+    .wa-bubble-received {
+      align-self: flex-start;
+      background: #202c33;
+      color: #e9edef;
+      border-top-left-radius: 0;
+    }
+
+    .wa-sender-name {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #a855f7;
+      margin-bottom: 2px;
+    }
+
+    .wa-time {
+      font-size: 0.65rem;
+      color: rgba(241, 245, 249, 0.6);
+      text-align: right;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+    }
+
+    .wa-footer {
+      background: #202c33;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .wa-input {
+      flex: 1;
+      background: #2a3942;
+      border: none;
+      outline: none;
+      color: #d1d5db;
+      padding: 10px 14px;
+      border-radius: 20px;
+      font-size: 0.92rem;
+    }
+
+    .wa-send-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #00a884;
+      border: none;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      transition: transform 0.1s;
+    }
+
+    .wa-send-btn:active { transform: scale(0.95); }
+  </style>
+</head>
+<body>
+
+  <div class="ambient-glow"></div>
+
+  <!-- 1. LANDING PAGE -->
+  <main id="landing-screen" class="screen active">
+    <div class="hero-container">
+      
+      <!-- S-Curve Horn Logo Vector Reproduction -->
+      <div class="logo-container">
+        <div class="logo-emblem">
+          <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="armorMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#475569"/>
+                <stop offset="45%" stop-color="#1e293b"/>
+                <stop offset="100%" stop-color="#0f172a"/>
+              </linearGradient>
+              <linearGradient id="neonCore" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#f5d0fe"/>
+                <stop offset="40%" stop-color="#e879f9"/>
+                <stop offset="100%" stop-color="#a855f7"/>
+              </linearGradient>
+            </defs>
+            <!-- Left Horn -->
+            <path d="M 45 80 C 35 75 22 60 20 48 C 18 36 32 28 35 15 C 38 30 26 38 28 48 C 30 58 40 68 45 80 Z" fill="url(#armorMetal)" stroke="#64748b" stroke-width="0.8"/>
+            <path d="M 42 74 C 34 68 25 58 24 49 C 23 40 33 33 33 22 C 34 31 27 38 29 47 C 31 55 38 64 42 74 Z" fill="url(#neonCore)"/>
+            <path d="M 28 50 C 27 43 30 36 32 30" stroke="#f0abfc" stroke-width="1.2" stroke-linecap="round"/>
+
+            <!-- Right Horn -->
+            <path d="M 55 80 C 65 75 78 60 80 48 C 82 36 68 28 65 15 C 62 30 74 38 72 48 C 70 58 60 68 55 80 Z" fill="url(#armorMetal)" stroke="#64748b" stroke-width="0.8"/>
+            <path d="M 58 74 C 66 68 75 58 76 49 C 77 40 67 33 67 22 C 66 31 73 38 71 47 C 69 55 62 64 58 74 Z" fill="url(#neonCore)"/>
+            <path d="M 72 50 C 73 43 70 36 68 30" stroke="#f0abfc" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h1 class="company-title">SHADOW</h1>
+        <span class="logo-subtitle">Secure Web IDE & Community</span>
+      </div>
+
+      <div id="user-greeting" class="logged-status" style="display: none;"></div>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="openNewProject()">Create a Project</button>
+        <button class="btn btn-folder" onclick="openLocalFolder()">📁 Open Folder (Device)</button>
+        <button class="btn btn-secondary" onclick="openCommunity()">See Others' Projects</button>
+        <button id="btn-auth-trigger" class="btn btn-auth" onclick="openModal('auth-modal')">🔑 Sign In / Sign Up</button>
+      </div>
+
+      <button class="btn btn-admin" onclick="openAdminDashboard()">🔒 App Creator Admin</button>
+      <button class="btn btn-admin" style="border-style: solid; margin-top: 8px;" onclick="viewSystemSourceCode()">🛡️ Creator App Code Lock</button>
+    </div>
+  </main>
+
+  <!-- 2. CODE EDITOR / IDE SCREEN -->
+  <div id="ide-screen" class="screen">
+    <header class="ide-header">
+      <div class="brand-mini">
+        <svg width="20" height="20" viewBox="0 0 100 100" fill="none">
+          <path d="M 45 80 C 35 75 22 60 20 48 C 18 36 32 28 35 15 Z" fill="#c084fc"/>
+          <path d="M 55 80 C 65 75 78 60 80 48 C 82 36 68 28 65 15 Z" fill="#c084fc"/>
+        </svg>
+        SHADOW // STUDIO
+      </div>
+      <div class="ide-actions">
+        <button class="ide-btn btn-publish" onclick="publishProject()">🚀 Publish</button>
+        <button class="ide-btn" onclick="openLocalFolder()">📁 Folder</button>
+        <button class="ide-btn" onclick="goHome()">🏠 Home</button>
+      </div>
+    </header>
+
+    <div class="ide-body">
+      <aside class="sidebar">
+        <div class="sidebar-title">
+          <span>Explorer</span>
+          <span id="folder-label" style="text-transform: none; color: #a855f7;"></span>
+        </div>
+        <ul class="file-tree" id="file-list"></ul>
+      </aside>
+
+      <section class="editor-container">
+        <div class="active-tab" id="current-filename">index.html</div>
+        <textarea id="code-editor" class="code-input" spellcheck="false"></textarea>
+      </section>
+
+      <section class="preview-container">
+        <div class="preview-header">Live Web Preview</div>
+        <iframe id="live-preview"></iframe>
+      </section>
+    </div>
+  </div>
+
+  <!-- 3. COMMUNITY / SEE OTHERS' PROJECTS -->
+  <div id="community-screen" class="screen">
+    <header class="community-header">
+      <div class="brand-mini">
+        <svg width="20" height="20" viewBox="0 0 100 100" fill="none">
+          <path d="M 45 80 C 35 75 22 60 20 48 C 18 36 32 28 35 15 Z" fill="#c084fc"/>
+          <path d="M 55 80 C 65 75 78 60 80 48 C 82 36 68 28 65 15 Z" fill="#c084fc"/>
+        </svg>
+        SHADOW // COMMUNITY
+      </div>
+      <button class="ide-btn" onclick="goHome()">🏠 Home</button>
+    </header>
+    <div class="community-body" id="projects-grid"></div>
+  </div>
+
+  <!-- MODALS -->
+  <div id="auth-modal" class="modal-overlay">
+    <div class="modal-box">
+      <h2>Sign In to SHADOW</h2>
+      <div id="auth-msg" class="msg-box"></div>
+      <form onsubmit="handleAuth(event)">
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="user-name" required placeholder="unique_username">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="user-pass" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn btn-primary">Sign In / Register</button>
+        <button type="button" class="btn btn-secondary" style="margin-top: 8px;" onclick="closeModal('auth-modal')">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="admin-modal" class="modal-overlay">
+    <div class="modal-box">
+      <h2>App Creator Dashboard</h2>
+      <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 15px;">
+        Privacy Active: You can only view total user count and usernames. Passwords and project files remain protected.
+      </p>
+      <div style="text-align: left; margin-bottom: 15px;">
+        <strong>Total Registered Users:</strong> <span id="admin-user-count" style="color: #a855f7; font-weight: bold;">0</span>
+      </div>
+      <div class="user-list" id="admin-username-list"></div>
+      <button class="btn btn-secondary" style="margin-top: 15px;" onclick="closeModal('admin-modal')">Close</button>
+    </div>
+  </div>
+
+  <!-- Project View Modal -->
+  <div id="view-project-modal" class="modal-overlay">
+    <div class="modal-box modal-large">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px; flex-wrap: wrap;">
+        <h2 id="view-proj-title" style="margin: 0; font-size: 1.1rem;"></h2>
+        <button class="ide-btn btn-primary" id="view-proj-chat-btn">💬 Talk To Creator</button>
+      </div>
+      <iframe id="view-proj-frame" style="flex: 1; border-radius: 8px; background: #fff;"></iframe>
+      <button class="btn btn-secondary" style="margin-top: 12px;" onclick="closeModal('view-project-modal')">Close Preview</button>
+    </div>
+  </div>
+
+  <!-- WhatsApp-Style Direct Chat Modal -->
+  <div id="msg-modal" class="modal-overlay">
+    <div class="modal-box whatsapp-modal">
+      <div class="wa-header">
+        <div class="wa-user-info">
+          <div class="wa-avatar" id="wa-avatar-char">U</div>
+          <div class="wa-name-box">
+            <span class="wa-name" id="wa-creator-name">@User</span>
+            <span class="wa-status" id="wa-project-title">Project Title</span>
+          </div>
+        </div>
+        <button class="ide-btn" style="padding: 4px 10px; font-size: 0.75rem;" onclick="closeModal('msg-modal')">✕</button>
+      </div>
+
+      <div class="wa-body" id="chat-messages-container"></div>
+
+      <div class="wa-footer">
+        <input type="text" id="doubt-text" class="wa-input" placeholder="Type a message..." onkeypress="handleChatKeyPress(event)">
+        <button class="wa-send-btn" onclick="sendDoubtMessage()">➤</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Firebase Cloud Service
+    const firebaseConfig = {
+      apiKey: "AIzaSyDummyKeyForShadowIDECommunity01",
+      authDomain: "shadow-app-global.firebaseapp.com",
+      projectId: "shadow-app-global",
+      storageBucket: "shadow-app-global.appspot.com",
+      messagingSenderId: "98765432100",
+      appId: "1:98765432100:web:abcdef123456789"
+    };
+
+    let db;
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+    } catch (e) {
+      console.log("Firebase initialized in Local Fallback mode.");
+    }
+
+    let projectFiles = {};
+    let activeFile = "index.html";
+    let activeMessagingCreator = "";
+    let activeProjectId = "";
+    let chatUnsubscribe = null;
+
+    const editor = document.getElementById('code-editor');
+    const preview = document.getElementById('live-preview');
+    const fileListEl = document.getElementById('file-list');
+    const currentTabEl = document.getElementById('current-filename');
+
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    function goHome() { showScreen('landing-screen'); }
+
+    function openNewProject() {
+      projectFiles = {
+        "index.html": `<!DOCTYPE html>\n<html>\n<head>\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <style>\n    body {\n      background: #0f0719;\n      color: #a855f7;\n      font-family: sans-serif;\n      display: flex;\n      justify-content: center;\n      align-items: center;\n      height: 100vh;\n      margin: 0;\n    }\n  </style>\n</head>\n<body>\n  <h1>Welcome to My SHADOW Project!</h1>\n</body>\n</html>`
+      };
+      activeFile = "index.html";
+      document.getElementById('folder-label').textContent = "(Default)";
+      renderFileList();
+      loadFile(activeFile);
+      showScreen('ide-screen');
+    }
+
+    async function openLocalFolder() {
+      try {
+        if ('showDirectoryPicker' in window) {
+          const directoryHandle = await window.showDirectoryPicker();
+          projectFiles = {};
+          document.getElementById('folder-label').textContent = `[ ${directoryHandle.name} ]`;
+
+          for await (const entry of directoryHandle.values()) {
+            if (entry.kind === 'file' && entry.name.match(/\.(html|css|js|txt|json|md)$/i)) {
+              const file = await entry.getFile();
+              projectFiles[entry.name] = await file.text();
+            }
+          }
+
+          const fileNames = Object.keys(projectFiles);
+          activeFile = fileNames.includes('index.html') ? 'index.html' : (fileNames[0] || 'index.html');
+          if (fileNames.length === 0) projectFiles['index.html'] = '<!-- Empty -->';
+
+          renderFileList();
+          loadFile(activeFile);
+          showScreen('ide-screen');
+        } else {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.webkitdirectory = true;
+          input.onchange = async (e) => {
+            projectFiles = {};
+            for (let i = 0; i < e.target.files.length; i++) {
+              if (e.target.files[i].name.match(/\.(html|css|js|txt|json|md)$/i)) {
+                projectFiles[e.target.files[i].name] = await e.target.files[i].text();
+              }
+            }
+            activeFile = Object.keys(projectFiles)[0] || 'index.html';
+            renderFileList();
+            loadFile(activeFile);
+            showScreen('ide-screen');
+          };
+          input.click();
+        }
+      } catch (err) {
+        console.log('Cancelled folder picker:', err);
+      }
+    }
+
+    const SESSION_USER_KEY = 'shadow_active_user';
+    const DB_PROJECTS_KEY = 'shadow_published_projects';
+
+    async function publishProject() {
+      const activeUser = localStorage.getItem(SESSION_USER_KEY);
+      if (!activeUser) {
+        alert("Please 'Sign In' first before publishing your project under your username!");
+        openModal('auth-modal');
+        return;
+      }
+
+      const projectName = prompt("Enter a title for your project:", "My Project");
+      if (!projectName) return;
+
+      let htmlCode = projectFiles['index.html'] || editor.value || "<h1>Published Project</h1>";
+      const newProj = {
+        id: 'proj_' + Date.now(),
+        title: projectName,
+        author: activeUser,
+        code: htmlCode,
+        timestamp: new Date().toLocaleDateString(),
+        createdAt: Date.now()
+      };
+
+      // Save to Global Firestore Database
+      if (db) {
+        try {
+          await db.collection('projects').doc(newProj.id).set(newProj);
+        } catch (e) { console.log(e); }
+      }
+
+      // Save to local storage cache
+      const localProjects = JSON.parse(localStorage.getItem(DB_PROJECTS_KEY) || '[]');
+      localProjects.push(newProj);
+      localStorage.setItem(DB_PROJECTS_KEY, JSON.stringify(localProjects));
+
+      alert(`Success! Project "${projectName}" published globally by @${activeUser}.`);
+    }
+
+    async function openCommunity() {
+      const projectsGrid = document.getElementById('projects-grid');
+      projectsGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #a855f7; padding: 40px;">Fetching global community projects...</div>`;
+
+      let projects = [];
+
+      if (db) {
+        try {
+          const snapshot = await db.collection('projects').orderBy('createdAt', 'desc').get();
+          snapshot.forEach(doc => projects.push(doc.data()));
+        } catch (e) {
+          console.log("Using cached storage fallback.");
+          projects = JSON.parse(localStorage.getItem(DB_PROJECTS_KEY) || '[]');
+        }
+      } else {
+        projects = JSON.parse(localStorage.getItem(DB_PROJECTS_KEY) || '[]');
+      }
+
+      if (projects.length === 0) {
+        projectsGrid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #94a3b8; padding: 40px;">No projects published globally yet. Be the first to publish!</div>`;
+      } else {
+        projectsGrid.innerHTML = projects.map(p => `
+          <div class="project-card">
+            <div class="project-title">${p.title}</div>
+            <div class="project-author">Creator: @${p.author} • ${p.timestamp}</div>
+            <div style="display: flex; gap: 10px; margin-top: auto;">
+              <button class="ide-btn" style="flex:1;" onclick="previewPublishedProject('${p.id}')">👁️ View</button>
+              <button class="ide-btn btn-primary" style="flex:1;" onclick="openDoubtModal('${p.author}', '${p.title}', '${p.id}')">💬 Message</button>
+            </div>
+          </div>
+        `).join('');
+      }
+      showScreen('community-screen');
+    }
+
+    async function previewPublishedProject(projId) {
+      let proj = null;
+      if (db) {
+        try {
+          const doc = await db.collection('projects').doc(projId).get();
+          if (doc.exists) proj = doc.data();
+        } catch (e) {}
+      }
+
+      if (!proj) {
+        const localProjects = JSON.parse(localStorage.getItem(DB_PROJECTS_KEY) || '[]');
+        proj = localProjects.find(p => p.id === projId);
+      }
+
+      if (proj && proj.code) {
+        document.getElementById('view-proj-title').textContent = `${proj.title} (@${proj.author})`;
+        const frame = document.getElementById('view-proj-frame');
+        frame.srcdoc = proj.code;
+
+        document.getElementById('view-proj-chat-btn').onclick = () => {
+          closeModal('view-project-modal');
+          openDoubtModal(proj.author, proj.title, proj.id);
+        };
+
+        openModal('view-project-modal');
+      } else {
+        alert("Project preview not available.");
+      }
+    }
+
+    function openDoubtModal(author, title, projId) {
+      const activeUser = localStorage.getItem(SESSION_USER_KEY);
+      if (!activeUser) {
+        alert("Please Sign In first to talk with creators.");
+        openModal('auth-modal');
+        return;
+      }
+      activeMessagingCreator = author;
+      activeProjectId = projId;
+
+      document.getElementById('wa-creator-name').textContent = `@${author}`;
+      document.getElementById('wa-project-title').textContent = title;
+      document.getElementById('wa-avatar-char').textContent = author.charAt(0).toUpperCase();
+      document.getElementById('doubt-text').value = '';
+      
+      subscribeToGlobalChat();
+      openModal('msg-modal');
+    }
+
+    function subscribeToGlobalChat() {
+      const chatKey = `${activeProjectId}_${activeMessagingCreator}`;
+      const container = document.getElementById('chat-messages-container');
+      const activeUser = localStorage.getItem(SESSION_USER_KEY);
+
+      if (chatUnsubscribe) chatUnsubscribe();
+
+      if (db) {
+        chatUnsubscribe = db.collection('chats').doc(chatKey).collection('messages')
+          .orderBy('timestamp', 'asc')
+          .onSnapshot(snapshot => {
+            let messageList = [];
+            snapshot.forEach(doc => messageList.push(doc.data()));
+            renderChatHTML(messageList, activeUser);
+          }, err => {
+            renderLocalChatFallback(chatKey, activeUser);
+          });
+      } else {
+        renderLocalChatFallback(chatKey, activeUser);
+      }
+    }
+
+    function renderLocalChatFallback(chatKey, activeUser) {
+      const DB_MESSAGES_KEY = 'shadow_project_chats';
+      const chats = JSON.parse(localStorage.getItem(DB_MESSAGES_KEY) || '{}');
+      const messageList = chats[chatKey] || [];
+      renderChatHTML(messageList, activeUser);
+    }
+
+    function renderChatHTML(messageList, activeUser) {
+      const container = document.getElementById('chat-messages-container');
+      if (messageList.length === 0) {
+        container.innerHTML = `<div style="text-align: center; color: #8696a0; font-size: 0.8rem; margin: auto;">No messages yet. Send a message to start chatting!</div>`;
+      } else {
+        container.innerHTML = messageList.map(m => {
+          const isSent = m.sender === activeUser;
+          const timeStr = new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          return `
+            <div class="wa-bubble ${isSent ? 'wa-bubble-sent' : 'wa-bubble-received'}">
+              ${!isSent ? `<div class="wa-sender-name">@${m.sender}</div>` : ''}
+              <div>${m.text}</div>
+              <div class="wa-time">${timeStr} ${isSent ? '✓✓' : ''}</div>
+            </div>
+          `;
+        }).join('');
+      }
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function handleChatKeyPress(e) {
+      if (e.key === 'Enter') sendDoubtMessage();
+    }
+
+    async function sendDoubtMessage() {
+      const text = document.getElementById('doubt-text').value.trim();
+      const activeUser = localStorage.getItem(SESSION_USER_KEY);
+      if (!text) return;
+
+      const chatKey = `${activeProjectId}_${activeMessagingCreator}`;
+      const msgObj = {
+        sender: activeUser,
+        text: text,
+        timestamp: Date.now()
+      };
+
+      if (db) {
+        try {
+          await db.collection('chats').doc(chatKey).collection('messages').add(msgObj);
+        } catch(e) {}
+      }
+
+      // Local storage fallback sync
+      const DB_MESSAGES_KEY = 'shadow_project_chats';
+      const chats = JSON.parse(localStorage.getItem(DB_MESSAGES_KEY) || '{}');
+      if (!chats[chatKey]) chats[chatKey] = [];
+      chats[chatKey].push(msgObj);
+      localStorage.setItem(DB_MESSAGES_KEY, JSON.stringify(chats));
+
+      document.getElementById('doubt-text').value = '';
+    }
+
+    function loadFile(filename) {
+      activeFile = filename;
+      currentTabEl.textContent = filename;
+      editor.value = projectFiles[filename] || "";
+      document.querySelectorAll('.file-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.filename === filename);
+      });
+      updatePreview();
+    }
+
+    function renderFileList() {
+      fileListEl.innerHTML = '';
+      Object.keys(projectFiles).forEach(name => {
+        const li = document.createElement('li');
+        li.className = `file-item ${name === activeFile ? 'active' : ''}`;
+        li.dataset.filename = name;
+        li.innerHTML = `📄 ${name}`;
+        li.onclick = () => loadFile(name);
+        fileListEl.appendChild(li);
+      });
+    }
+
+    function updatePreview() {
+      if (activeFile.endsWith('.html')) {
+        preview.srcdoc = editor.value;
+      }
+    }
+
+    editor.addEventListener('input', () => {
+      projectFiles[activeFile] = editor.value;
+      updatePreview();
+    });
+
+    // CREATOR SOURCE CODE SECURITY LOCK
+    function viewSystemSourceCode() {
+      const pass = prompt("Enter App Creator Security Passkey:");
+      if (pass !== "admin123") {
+        alert("Access Denied: Protected SHADOW App Source Code. Only the app creator can inspect or modify system architecture.");
+        return;
+      }
+      alert("Passkey Verified: Creator system access granted.");
+    }
+
+    const DB_USERS_KEY = 'shadow_app_registered_users';
+    function getUsersDB() { return JSON.parse(localStorage.getItem(DB_USERS_KEY) || '[]'); }
+    function saveUsersDB(dbArr) { localStorage.setItem(DB_USERS_KEY, JSON.stringify(dbArr)); }
+
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    async function handleAuth(event) {
+      event.preventDefault();
+      const username = document.getElementById('user-name').value.trim();
+      const password = document.getElementById('user-pass').value;
+      const msgBox = document.getElementById('auth-msg');
+
+      if (db) {
+        try {
+          const userDoc = await db.collection('users').doc(username.toLowerCase()).get();
+          if (userDoc.exists) {
+            if (userDoc.data().password !== password) {
+              msgBox.className = "msg-box msg-error";
+              msgBox.textContent = "Incorrect password.";
+              return;
+            }
+          } else {
+            await db.collection('users').doc(username.toLowerCase()).set({ username, password });
+          }
+        } catch (e) {}
+      }
+
+      // Local DB sync
+      const users = getUsersDB();
+      const existingUser = users.find(u => u.username.toLowerCase() === username.toLowerCase());
+
+      if (existingUser) {
+        if (existingUser.password !== password) {
+          msgBox.className = "msg-box msg-error";
+          msgBox.textContent = "Incorrect password.";
+          return;
+        }
+      } else {
+        users.push({ username, password });
+        saveUsersDB(users);
+      }
+
+      localStorage.setItem(SESSION_USER_KEY, username);
+      msgBox.className = "msg-box msg-success";
+      msgBox.textContent = "Signed in successfully!";
+
+      setTimeout(() => {
+        closeModal('auth-modal');
+        updateUserUI();
+      }, 800);
+    }
+
+    function handleLogout() {
+      localStorage.removeItem(SESSION_USER_KEY);
+      updateUserUI();
+    }
+
+    async function openAdminDashboard() {
+      const pass = prompt("Enter App Creator Access Passkey:");
+      if (pass !== "admin123") {
+        alert("Access Denied.");
+        return;
+      }
+
+      let usersList = [];
+      if (db) {
+        try {
+          const snapshot = await db.collection('users').get();
+          snapshot.forEach(doc => usersList.push(doc.data().username));
+        } catch(e) {}
+      }
+
+      if (usersList.length === 0) {
+        usersList = getUsersDB().map(u => u.username);
+      }
+
+      document.getElementById('admin-user-count').textContent = usersList.length;
+      document.getElementById('admin-username-list').innerHTML = usersList.length 
+        ? usersList.map(u => `• ${u}`).join('<br>') 
+        : "No users registered yet.";
+      openModal('admin-modal');
+    }
+
+    function updateUserUI() {
+      const activeUser = localStorage.getItem(SESSION_USER_KEY);
+      const greeting = document.getElementById('user-greeting');
+      const authBtn = document.getElementById('btn-auth-trigger');
+
+      if (activeUser) {
+        greeting.style.display = 'flex';
+        greeting.innerHTML = `<span>Signed in as: <strong>@${activeUser}</strong></span> <button class="btn-logout" onclick="handleLogout()">Sign Out</button>`;
+        authBtn.style.display = 'none';
+      } else {
+        greeting.style.display = 'none';
+        authBtn.style.display = 'inline-flex';
+      }
+    }
+
+    updateUserUI();
+  </script>
+</body>
+</html>

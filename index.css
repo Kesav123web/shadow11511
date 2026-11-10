@@ -1,0 +1,705 @@
+html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SHADOW - Next-Gen Web Builder & Cloud IDE</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              black: '#06020a',
+              dark: '#0f051b',
+              card: '#160928',
+              purple: '#9333ea',
+              lightPurple: '#c084fc',
+              glow: '#a855f7'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #06020a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #3b0764;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #7e22ce;
+    }
+
+    /* Text Glow Effect for SHADOW Title */
+    .glow-title {
+      color: #ffffff;
+      text-shadow: 0 0 15px rgba(168, 85, 247, 0.9),
+                   0 0 35px rgba(147, 51, 234, 0.7),
+                   0 0 75px rgba(126, 34, 206, 0.5);
+    }
+
+    /* Monospace Editor Styling */
+    .code-font {
+      font-family: 'Fira Code', 'Cascadia Code', 'Courier New', Courier, monospace;
+      tab-size: 2;
+    }
+
+    /* Line Numbers Alignment */
+    .line-numbers {
+      user-select: none;
+    }
+
+    /* View Animations */
+    .page-view {
+      transition: opacity 0.35s ease-in-out, transform 0.35s ease-in-out;
+    }
+    .page-hidden {
+      display: none !important;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Ambient Background Glow Animation */
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.25; transform: translate(-50%, -50%) scale(1); }
+      50% { opacity: 0.45; transform: translate(-50%, -50%) scale(1.1); }
+    }
+    .ambient-pulse {
+      animation: pulseGlow 7s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-brand-black text-white min-h-screen font-sans overflow-x-hidden antialiased">
+
+  <!-- ========================================== -->
+  <!-- SCREEN 1: LANDING PAGE                     -->
+  <!-- ========================================== -->
+  <div id="page-landing" class="page-view relative min-h-screen flex flex-col justify-center items-center px-4 overflow-hidden">
+    <!-- Ambient Background Lighting Glow -->
+    <div class="ambient-pulse absolute top-1/2 left-1/2 w-[550px] h-[550px] bg-brand-purple/30 blur-[150px] rounded-full pointer-events-none"></div>
+
+    <!-- Centered Glassmorphism Card Container -->
+    <main class="relative z-10 text-center p-8 sm:p-14 bg-brand-dark/80 border border-brand-purple/30 rounded-3xl backdrop-blur-2xl shadow-[0_20px_60px_rgba(0,0,0,0.9),0_0_60px_rgba(147,51,234,0.2)] max-w-lg w-full flex flex-col items-center">
+      
+      <!-- Company Brand Title -->
+      <h1 class="glow-title text-6xl sm:text-7xl font-black tracking-widest uppercase mb-10 select-none">
+        SHADOW
+      </h1>
+
+      <!-- Action Buttons Container -->
+      <div class="flex flex-col gap-5 w-full">
+        <!-- 1st Option: Create a Project -->
+        <button id="btn-create-project" onclick="navigateTo('editor')" class="group relative flex items-center justify-center gap-3 w-full py-4 px-6 text-base font-semibold rounded-xl text-white bg-gradient-to-r from-purple-700 via-purple-600 to-brand-glow border border-purple-400/40 shadow-[0_6px_25px_rgba(147,51,234,0.45)] hover:shadow-[0_10px_40px_rgba(168,85,247,0.75)] hover:-translate-y-1 transition-all duration-300 active:translate-y-0">
+          <i class="fa-solid fa-code text-purple-200 group-hover:rotate-12 transition-transform"></i>
+          <span>Create a Project</span>
+        </button>
+
+        <!-- 2nd Option: See Others' Projects -->
+        <button id="btn-see-projects" onclick="openGalleryModal()" class="group flex items-center justify-center gap-3 w-full py-4 px-6 text-base font-semibold rounded-xl text-purple-200 bg-brand-card/90 border border-brand-purple/30 shadow-lg hover:bg-purple-950/70 hover:border-brand-glow/60 hover:text-white hover:-translate-y-1 transition-all duration-300 active:translate-y-0">
+          <i class="fa-solid fa-compass text-purple-400 group-hover:scale-110 transition-transform"></i>
+          <span>See Others' Projects</span>
+        </button>
+      </div>
+
+      <!-- Subtitle -->
+      <p class="text-xs text-purple-300/50 mt-10 tracking-widest uppercase font-medium">
+        Cloud Web Studio & Sublime Code Engine
+      </p>
+    </main>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- SCREEN 2: IDE / CODE EDITOR PAGE           -->
+  <!-- ========================================== -->
+  <div id="page-editor" class="page-view page-hidden min-h-screen flex flex-col bg-[#08020e] text-gray-200 overflow-hidden">
+    
+    <!-- Top Header Bar -->
+    <header class="h-14 border-b border-purple-900/40 bg-brand-black/95 px-4 flex items-center justify-between gap-4 z-20 shrink-0">
+      <!-- Left: Logo & Project Title -->
+      <div class="flex items-center gap-3">
+        <button onclick="navigateTo('landing')" class="flex items-center gap-2 text-purple-400 hover:text-white transition px-2 py-1 rounded-lg hover:bg-purple-900/40" title="Back to Home">
+          <i class="fa-solid fa-chevron-left text-sm"></i>
+          <span class="text-xs uppercase font-bold tracking-widest text-purple-300">SHADOW</span>
+        </button>
+        <span class="text-purple-800">|</span>
+        <div class="flex items-center gap-2 bg-purple-950/50 border border-purple-800/40 px-3 py-1 rounded-md">
+          <i class="fa-regular fa-folder-open text-purple-400 text-xs"></i>
+          <input type="text" id="project-name" value="shadow-app" class="bg-transparent text-xs font-semibold text-white focus:outline-none w-28 sm:w-44" placeholder="Project Name">
+        </div>
+      </div>
+
+      <!-- Center: Action Controls -->
+      <div class="flex items-center gap-2">
+        <button onclick="runCode()" class="flex items-center gap-2 px-4 py-1.5 bg-gradient-to-r from-purple-700 to-purple-500 hover:from-purple-600 hover:to-purple-400 text-white text-xs font-semibold rounded-md shadow-[0_0_15px_rgba(147,51,234,0.4)] transition active:scale-95">
+          <i class="fa-solid fa-play"></i>
+          <span>Run Code</span>
+        </button>
+        <button onclick="resetEditor()" class="px-3 py-1.5 bg-purple-950/60 hover:bg-purple-900/60 border border-purple-800/40 text-purple-300 text-xs font-medium rounded-md transition" title="Clear or Reset Editor">
+          <i class="fa-solid fa-rotate-right mr-1"></i> Reset
+        </button>
+      </div>
+
+      <!-- Right: Status / Actions -->
+      <div class="flex items-center gap-3">
+        <span class="text-[11px] text-purple-400/70 hidden sm:inline-flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Auto-Sync Enabled
+        </span>
+        <button onclick="navigateTo('landing')" class="text-xs px-3 py-1.5 bg-red-950/40 hover:bg-red-900/60 text-red-300 border border-red-800/40 rounded-md transition">
+          Exit IDE
+        </button>
+      </div>
+    </header>
+
+    <!-- Workspace Main Grid Split -->
+    <div class="flex-1 flex overflow-hidden">
+      
+      <!-- Sidebar / File Explorer Pane -->
+      <aside class="w-60 border-r border-purple-900/30 bg-[#0b0414] flex flex-col hidden md:flex select-none shrink-0">
+        <!-- Section Header -->
+        <div class="p-3 text-xs font-bold uppercase tracking-wider text-purple-400 border-b border-purple-900/20 flex justify-between items-center">
+          <span>Explorer</span>
+          <i class="fa-solid fa-folder-tree text-purple-500"></i>
+        </div>
+
+        <!-- File List -->
+        <div class="p-2 space-y-1">
+          <div class="text-[11px] text-purple-300/50 uppercase font-semibold px-2 py-1">Project Files</div>
+          <button onclick="switchTab('html')" id="file-btn-html" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs rounded-md bg-purple-900/40 text-purple-200 border border-purple-700/40">
+            <i class="fa-brands fa-html5 text-orange-400 text-sm"></i>
+            <span>index.html</span>
+          </button>
+          <button onclick="switchTab('css')" id="file-btn-css" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs rounded-md hover:bg-purple-950/50 text-gray-400 border border-transparent">
+            <i class="fa-brands fa-css3-alt text-blue-400 text-sm"></i>
+            <span>style.css</span>
+          </button>
+          <button onclick="switchTab('js')" id="file-btn-js" class="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs rounded-md hover:bg-purple-950/50 text-gray-400 border border-transparent">
+            <i class="fa-brands fa-js text-yellow-400 text-sm"></i>
+            <span>script.js</span>
+          </button>
+        </div>
+
+        <!-- Starter Templates Dropdown Section -->
+        <div class="mt-4 p-2 border-t border-purple-900/20 space-y-1">
+          <div class="text-[11px] text-purple-300/50 uppercase font-semibold px-2 py-1">Load Template</div>
+          <button onclick="loadTemplate('landing')" class="w-full text-left px-3 py-1.5 text-xs rounded-md hover:bg-purple-900/30 text-purple-300 transition flex items-center gap-2">
+            <i class="fa-solid fa-wand-magic-sparkles text-purple-400"></i> Landing Page
+          </button>
+          <button onclick="loadTemplate('portfolio')" class="w-full text-left px-3 py-1.5 text-xs rounded-md hover:bg-purple-900/30 text-purple-300 transition flex items-center gap-2">
+            <i class="fa-solid fa-user-gear text-purple-400"></i> Personal Portfolio
+          </button>
+          <button onclick="loadTemplate('game')" class="w-full text-left px-3 py-1.5 text-xs rounded-md hover:bg-purple-900/30 text-purple-300 transition flex items-center gap-2">
+            <i class="fa-solid fa-gamepad text-purple-400"></i> Interactive Canvas Game
+          </button>
+        </div>
+      </aside>
+
+      <!-- Center Code Editor Pane (Sublime / VS Code Vibe) -->
+      <section class="flex-1 flex flex-col border-r border-purple-900/30 bg-[#06020a] overflow-hidden">
+        
+        <!-- File Tabs Bar -->
+        <div class="flex items-center border-b border-purple-900/30 bg-[#090310] px-2 pt-1.5 gap-1 overflow-x-auto select-none shrink-0">
+          <button id="tab-html" onclick="switchTab('html')" class="flex items-center gap-2 px-4 py-2 text-xs font-medium border-t-2 border-brand-purple bg-[#06020a] text-white rounded-t-md">
+            <i class="fa-brands fa-html5 text-orange-400"></i> index.html
+          </button>
+          <button id="tab-css" onclick="switchTab('css')" class="flex items-center gap-2 px-4 py-2 text-xs font-medium border-t-2 border-transparent text-gray-400 hover:text-white rounded-t-md">
+            <i class="fa-brands fa-css3-alt text-blue-400"></i> style.css
+          </button>
+          <button id="tab-js" onclick="switchTab('js')" class="flex items-center gap-2 px-4 py-2 text-xs font-medium border-t-2 border-transparent text-gray-400 hover:text-white rounded-t-md">
+            <i class="fa-brands fa-js text-yellow-400"></i> script.js
+          </button>
+        </div>
+
+        <!-- Code Editing Viewport -->
+        <div class="flex-1 flex relative overflow-hidden">
+          <!-- Line Numbers Container -->
+          <div id="line-numbers" class="line-numbers w-12 py-3 bg-[#08020d] text-right pr-3 text-xs text-purple-900/80 font-mono select-none border-r border-purple-950/70 overflow-hidden shrink-0">
+            1
+          </div>
+
+          <!-- Code Inputs Area -->
+          <div class="flex-1 relative">
+            <textarea id="code-html" oninput="handleCodeInput()" onscroll="syncScroll('html')" spellcheck="false" class="code-font absolute inset-0 w-full h-full bg-transparent text-purple-100 p-3 text-xs sm:text-sm leading-relaxed outline-none resize-none z-10 whitespace-pre"></textarea>
+            
+            <textarea id="code-css" oninput="handleCodeInput()" onscroll="syncScroll('css')" spellcheck="false" class="code-font absolute inset-0 w-full h-full bg-transparent text-purple-100 p-3 text-xs sm:text-sm leading-relaxed outline-none resize-none z-0 hidden whitespace-pre"></textarea>
+            
+            <textarea id="code-js" oninput="handleCodeInput()" onscroll="syncScroll('js')" spellcheck="false" class="code-font absolute inset-0 w-full h-full bg-transparent text-purple-100 p-3 text-xs sm:text-sm leading-relaxed outline-none resize-none z-0 hidden whitespace-pre"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Live Preview Pane -->
+      <section class="flex-1 flex flex-col bg-slate-950 border-l border-purple-900/30 overflow-hidden">
+        <!-- Preview Header Bar -->
+        <div class="h-9 bg-[#0a0312] border-b border-purple-900/30 px-4 flex items-center justify-between text-xs select-none shrink-0">
+          <div class="flex items-center gap-2 text-purple-300">
+            <i class="fa-solid fa-desktop text-purple-400"></i>
+            <span class="font-semibold">Interactive Preview Pane</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="runCode()" class="text-purple-400 hover:text-white px-2 py-0.5 rounded hover:bg-purple-900/30" title="Refresh Preview">
+              <i class="fa-solid fa-rotate"></i>
+            </button>
+            <button onclick="openPreviewNewTab()" class="text-purple-400 hover:text-white px-2 py-0.5 rounded hover:bg-purple-900/30" title="Open Preview in New Tab">
+              <i class="fa-solid fa-up-right-from-square"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Preview Rendering Iframe -->
+        <div class="flex-1 bg-white relative">
+          <iframe id="preview-frame" class="w-full h-full border-none"></iframe>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- IDE Status Bar Footer -->
+    <footer class="h-6 bg-[#050108] border-t border-purple-950 px-4 flex items-center justify-between text-[11px] text-purple-400/60 font-mono select-none shrink-0">
+      <div class="flex items-center gap-4">
+        <span class="text-purple-400"><i class="fa-solid fa-circle text-[7px] text-emerald-400 mr-1.5"></i>Live Engine</span>
+        <span id="active-file-indicator">Editing: index.html</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <span id="cursor-pos">Ln 1, Col 1</span>
+        <span>UTF-8</span>
+        <span>SHADOW Cloud Engine</span>
+      </div>
+    </footer>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- MODAL: SEE OTHERS' PROJECTS                -->
+  <!-- ========================================== -->
+  <div id="modal-gallery" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex justify-center items-center p-4 hidden">
+    <div class="bg-brand-dark border border-purple-800/40 w-full max-w-2xl rounded-2xl p-6 shadow-2xl relative">
+      <button onclick="closeGalleryModal()" class="absolute top-4 right-4 text-purple-400 hover:text-white">
+        <i class="fa-solid fa-xmark text-xl"></i>
+      </button>
+
+      <h2 class="text-xl font-bold text-white mb-1 flex items-center gap-2">
+        <i class="fa-solid fa-cubes text-purple-400"></i> Community Showcase
+      </h2>
+      <p class="text-xs text-purple-300/70 mb-6">Discover featured creations designed inside the SHADOW Web Studio.</p>
+
+      <!-- Project Cards Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Card 1 -->
+        <div class="bg-purple-950/40 border border-purple-800/30 p-4 rounded-xl hover:border-purple-500/60 transition group cursor-pointer" onclick="loadSampleProject('landing')">
+          <div class="h-28 bg-gradient-to-br from-purple-900 to-indigo-950 rounded-lg mb-3 flex items-center justify-center border border-purple-700/30">
+            <i class="fa-solid fa-wand-magic-sparkles text-3xl text-purple-300 group-hover:scale-110 transition"></i>
+          </div>
+          <h3 class="font-semibold text-sm text-purple-100">CyberPulse AI Studio</h3>
+          <p class="text-xs text-purple-300/60 mt-1">Dark neon SaaS web page with interactive counters.</p>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="bg-purple-950/40 border border-purple-800/30 p-4 rounded-xl hover:border-purple-500/60 transition group cursor-pointer" onclick="loadSampleProject('game')">
+          <div class="h-28 bg-gradient-to-br from-slate-900 to-purple-950 rounded-lg mb-3 flex items-center justify-center border border-purple-700/30">
+            <i class="fa-solid fa-gamepad text-3xl text-purple-300 group-hover:scale-110 transition"></i>
+          </div>
+          <h3 class="font-semibold text-sm text-purple-100">Neon Particle Arcade</h3>
+          <p class="text-xs text-purple-300/60 mt-1">Interactive HTML5 Canvas game with controls.</p>
+        </div>
+      </div>
+
+      <div class="mt-6 flex justify-end">
+        <button onclick="closeGalleryModal()" class="px-4 py-2 bg-purple-900/60 hover:bg-purple-800/60 text-purple-200 text-xs font-semibold rounded-lg transition">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- JAVASCRIPT APP LOGIC & ENGINE              -->
+  <!-- ========================================== -->
+  <script>
+    // State Management
+    let currentTab = 'html';
+    const codeState = {
+      html: '',
+      css: '',
+      js: ''
+    };
+
+    // Pre-loaded Starter Code Templates
+    const templates = {
+      landing: {
+        html: `<div class="hero">
+  <div class="badge">SHADOW STUDIO</div>
+  <h1>Build The Future Today</h1>
+  <p>Experience ultra-fast cloud web creation with live previewing.</p>
+  <button id="clickBtn" class="btn">Click Me!</button>
+  <p id="counter">Clicks: 0</p>
+</div>`,
+        css: `body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(circle at center, #1b0a2a 0%, #08030d 100%);
+  font-family: 'Segoe UI', sans-serif;
+  color: #ffffff;
+  text-align: center;
+}
+
+.hero {
+  padding: 40px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: #c084fc;
+  background: rgba(147, 51, 234, 0.2);
+  border-radius: 20px;
+  margin-bottom: 15px;
+}
+
+h1 {
+  margin: 0 0 10px 0;
+  font-size: 2.2rem;
+  background: linear-gradient(to right, #ffffff, #c084fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+p {
+  color: #a78bfa;
+  font-size: 0.95rem;
+}
+
+.btn {
+  margin-top: 20px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #7e22ce, #a855f7);
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(147, 51, 234, 0.4);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(168, 85, 247, 0.6);
+}`,
+        js: `let count = 0;
+const btn = document.getElementById('clickBtn');
+const counterDisplay = document.getElementById('counter');
+
+btn.addEventListener('click', () => {
+  count++;
+  counterDisplay.textContent = \`Clicks: \${count}\`;
+  btn.style.transform = 'scale(0.95)';
+  setTimeout(() => btn.style.transform = 'none', 100);
+});`
+      },
+
+      portfolio: {
+        html: `<div class="card">
+  <div class="avatar">⚡</div>
+  <h2>Alex Rivers</h2>
+  <span class="tag">UI/UX & Web Developer</span>
+  <p>Passionate about dark aesthetics, glowing interfaces, and clean interactive code.</p>
+  <div class="socials">
+    <a href="#">Github</a>
+    <a href="#">Twitter</a>
+  </div>
+</div>`,
+        css: `body {
+  min-height: 100vh;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #090311;
+  font-family: sans-serif;
+  color: #fff;
+}
+.card {
+  width: 280px;
+  padding: 30px;
+  background: #130724;
+  border: 1px solid #7e22ce;
+  border-radius: 16px;
+  text-align: center;
+}
+.avatar {
+  font-size: 40px;
+  margin-bottom: 10px;
+}
+.tag {
+  font-size: 12px;
+  color: #c084fc;
+}
+p {
+  font-size: 13px;
+  color: #94a3b8;
+  margin: 15px 0 20px 0;
+}
+.socials a {
+  color: #a855f7;
+  text-decoration: none;
+  margin: 0 8px;
+  font-size: 13px;
+  font-weight: bold;
+}`,
+        js: `console.log("Portfolio card loaded seamlessly!");`
+      },
+
+      game: {
+        html: `<div class="game-box">
+  <h3>Neon Target Clicker</h3>
+  <canvas id="gameCanvas" width="300" height="200"></canvas>
+  <p id="score">Score: 0</p>
+</div>`,
+        css: `body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #05010a;
+  color: white;
+  font-family: sans-serif;
+  text-align: center;
+}
+.game-box {
+  background: #12071f;
+  padding: 20px;
+  border: 1px solid #9333ea;
+  border-radius: 12px;
+}
+canvas {
+  background: #000;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid rgba(168, 85, 247, 0.4);
+}`,
+        js: `const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+let score = 0;
+let target = { x: 150, y: 100, r: 20 };
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.beginPath();
+  ctx.arc(target.x, target.y, target.r, 0, Math.PI * 2);
+  ctx.fillStyle = '#a855f7';
+  ctx.shadowBlur = 15;
+  ctx.shadowColor = '#a855f7';
+  ctx.fill();
+}
+
+canvas.addEventListener('click', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const dist = Math.hypot(x - target.x, y - target.y);
+  if (dist < target.r) {
+    score++;
+    document.getElementById('score').textContent = 'Score: ' + score;
+    target.x = Math.random() * (canvas.width - 40) + 20;
+    target.y = Math.random() * (canvas.height - 40) + 20;
+    draw();
+  }
+});
+
+draw();`
+      }
+    };
+
+    // Initialize Page
+    window.onload = function() {
+      loadTemplate('landing');
+    };
+
+    // Navigation Switcher
+    function navigateTo(page) {
+      const landing = document.getElementById('page-landing');
+      const editor = document.getElementById('page-editor');
+
+      if (page === 'editor') {
+        landing.classList.add('page-hidden');
+        editor.classList.remove('page-hidden');
+        runCode();
+      } else {
+        editor.classList.add('page-hidden');
+        landing.classList.remove('page-hidden');
+      }
+    }
+
+    // Switch Editor Active Code File (HTML / CSS / JS)
+    function switchTab(tab) {
+      currentTab = tab;
+      
+      ['html', 'css', 'js'].forEach(t => {
+        const tabEl = document.getElementById(`tab-${t}`);
+        const fileBtn = document.getElementById(`file-btn-${t}`);
+        const codeEl = document.getElementById(`code-${t}`);
+
+        if (t === tab) {
+          tabEl.className = "flex items-center gap-2 px-4 py-2 text-xs font-medium border-t-2 border-brand-purple bg-[#06020a] text-white rounded-t-md";
+          if(fileBtn) fileBtn.className = "w-full flex items-center gap-2.5 px-3 py-1.5 text-xs rounded-md bg-purple-900/40 text-purple-200 border border-purple-700/40";
+          codeEl.classList.remove('hidden');
+          codeEl.classList.add('z-10');
+        } else {
+          tabEl.className = "flex items-center gap-2 px-4 py-2 text-xs font-medium border-t-2 border-transparent text-gray-400 hover:text-white rounded-t-md";
+          if(fileBtn) fileBtn.className = "w-full flex items-center gap-2.5 px-3 py-1.5 text-xs rounded-md hover:bg-purple-950/50 text-gray-400 border border-transparent";
+          codeEl.classList.add('hidden');
+          codeEl.classList.remove('z-10');
+        }
+      });
+
+      document.getElementById('active-file-indicator').textContent = `Editing: index.${tab === 'html' ? 'html' : tab}`;
+      updateLineNumbers();
+    }
+
+    // Load Starter Template
+    function loadTemplate(name) {
+      if (!templates[name]) return;
+      codeState.html = templates[name].html;
+      codeState.css = templates[name].css;
+      codeState.js = templates[name].js;
+
+      document.getElementById('code-html').value = codeState.html;
+      document.getElementById('code-css').value = codeState.css;
+      document.getElementById('code-js').value = codeState.js;
+
+      updateLineNumbers();
+      runCode();
+    }
+
+    // Handle Input Events inside Textarea
+    function handleCodeInput() {
+      codeState[currentTab] = document.getElementById(`code-${currentTab}`).value;
+      updateLineNumbers();
+      runCode();
+    }
+
+    // Dynamic Line Numbers Renderer
+    function updateLineNumbers() {
+      const activeTextarea = document.getElementById(`code-${currentTab}`);
+      const lineCount = activeTextarea.value.split('\n').length;
+      const lineContainer = document.getElementById('line-numbers');
+      
+      let linesHTML = '';
+      for (let i = 1; i <= Math.max(lineCount, 30); i++) {
+        linesHTML += `<div>${i}</div>`;
+      }
+      lineContainer.innerHTML = linesHTML;
+
+      // Cursor positioning info
+      const cursorPos = activeTextarea.selectionStart;
+      const lineNum = activeTextarea.value.substr(0, cursorPos).split('\n').length;
+      const colNum = cursorPos - activeTextarea.value.lastIndexOf('\n', cursorPos - 1);
+      document.getElementById('cursor-pos').textContent = `Ln ${lineNum}, Col ${colNum}`;
+    }
+
+    // Sync Textarea scroll with Line numbers
+    function syncScroll(tab) {
+      if (tab === currentTab) {
+        const textarea = document.getElementById(`code-${tab}`);
+        const lineContainer = document.getElementById('line-numbers');
+        lineContainer.scrollTop = textarea.scrollTop;
+      }
+    }
+
+    // Execute & Compile HTML + CSS + JS inside Live Preview iframe
+    function runCode() {
+      const iframe = document.getElementById('preview-frame');
+      const html = document.getElementById('code-html').value;
+      const css = document.getElementById('code-css').value;
+      const js = document.getElementById('code-js').value;
+
+      const combinedContent = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <style>${css}</style>
+          </head>
+          <body>
+            ${html}
+            <script>${js}<\/script>
+          </body>
+        </html>
+      `;
+
+      const doc = iframe.contentDocument || iframe.contentWindow.document;
+      doc.open();
+      doc.write(combinedContent);
+      doc.close();
+    }
+
+    // Reset Editor
+    function resetEditor() {
+      codeState.html = '';
+      codeState.css = '';
+      codeState.js = '';
+      document.getElementById('code-html').value = '';
+      document.getElementById('code-css').value = '';
+      document.getElementById('code-js').value = '';
+      updateLineNumbers();
+      runCode();
+    }
+
+    // Pop Out Preview in New Window
+    function openPreviewNewTab() {
+      const html = document.getElementById('code-html').value;
+      const css = document.getElementById('code-css').value;
+      const js = document.getElementById('code-js').value;
+
+      const newWindow = window.open();
+      newWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head><style>${css}</style></head>
+          <body>${html}<script>${js}<\/script></body>
+        </html>
+      `);
+    }
+    
+    // Gallery Modal Handlers
+    function openGalleryModal() {
+      document.getElementById('modal-gallery').classList.remove('hidden');
+    }
+
+    function closeGalleryModal() {
+      document.getElementById('modal-gallery').classList.add('hidden');
+    }
+
+    function loadSampleProject(type) {
+      closeGalleryModal();
+      navigateTo('editor');
+      loadTemplate(type);
+    }
+  </script>
+</body>
+</html>
